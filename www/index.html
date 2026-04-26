@@ -3,38 +3,214 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>MedControl</title>
 
 <style>
+*{box-sizing:border-box}
+
 body{
-  background:#0b1220;
+  margin:0;
+  background:#07111f;
   color:#fff;
   font-family:Arial;
-  padding:20px;
+  padding:24px;
 }
 
-h1{
-  font-size:32px;
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:20px;
 }
 
-input, button, select{
+.brand h1{
+  margin:0;
+  font-size:36px;
+}
+
+input,button,select{
   width:100%;
-  padding:12px;
-  margin:6px 0;
-  border-radius:10px;
+  padding:14px;
+  margin:8px 0;
+  border-radius:12px;
   border:none;
+  font-size:18px;
+}
+
+input,select{
+  background:#fff;
+  color:#000;
 }
 
 button{
-  background:#06b6d4;
+  background:#12b8d0;
   font-weight:bold;
 }
 
+.mute.on{
+  background:#64748b;
+  color:#fff;
+}
+
 .card{
-  background:#111827;
-  padding:12px;
+  background:#111c2f;
+  padding:14px;
+  border-radius:14px;
+  margin-top:14px;
+}
+
+.actions{
+  display:flex;
+  gap:6px;
   margin-top:10px;
+}
+
+.actions button{
+  flex:1;
+  font-size:14px;
+}
+
+.ok{background:#22c55e}
+.warn{background:#fb923c}
+.danger{background:#ef4444;color:#fff}
+
+.test{
+  margin-top:30px;
+  padding:14px;
+  border-radius:14px;
+  background:#0f1a2d;
+}
+</style>
+</head>
+
+<body>
+
+<div class="brand">
+  <div>💊</div>
+  <h1>MedControl</h1>
+</div>
+
+<button id="muteBtn">🔊 MUTE OFF</button>
+
+<input id="nome" placeholder="Nome do medicamento">
+<input id="dose" placeholder="Dose (mg)">
+<input id="intervalo" type="number" placeholder="Intervalo (horas)">
+
+<button id="btnCadastrar">Cadastrar</button>
+
+<div id="lista"></div>
+
+<div class="test">
+  <b>Teste:</b>
+  <button onclick="testNotif()">📩 Notificação</button>
+  <button onclick="testSom()">🔊 Som</button>
+  <button onclick="testTela()">📱 Tela</button>
+</div>
+
+<script>
+const KEY="meds";
+const PREF="prefs";
+
+function load(){return JSON.parse(localStorage.getItem(KEY)||"[]")}
+function save(d){localStorage.setItem(KEY,JSON.stringify(d))}
+
+function prefs(){return JSON.parse(localStorage.getItem(PREF)||'{"mute":false,"modes":{}}')}
+function savePrefs(p){localStorage.setItem(PREF,JSON.stringify(p))}
+
+function toggleMute(){
+  let p=prefs();
+  p.mute=!p.mute;
+  savePrefs(p);
+  render();
+}
+
+function cadastrar(){
+  let nome=document.getElementById("nome").value.trim();
+  let dose=document.getElementById("dose").value.trim();
+  let intervalo=parseInt(document.getElementById("intervalo").value);
+
+  if(!nome)return alert("Informe o medicamento");
+
+  let data=load();
+
+  data.push({
+    id:Date.now(),
+    nome,dose,intervalo,
+    proxima:Date.now()
+  });
+
+  save(data);
+  render();
+}
+
+function setModo(id,val){
+  let p=prefs();
+  p.modes[id]=val;
+  savePrefs(p);
+}
+
+function render(){
+  let lista=document.getElementById("lista");
+  lista.innerHTML="";
+
+  let p=prefs();
+
+  document.getElementById("muteBtn").innerText =
+    p.mute?"🔇 MUTE ON":"🔊 MUTE OFF";
+
+  load().forEach(m=>{
+    let modo=p.modes[m.id]||"alarm";
+
+    let div=document.createElement("div");
+    div.className="card";
+
+    div.innerHTML=`
+      <b>${m.nome}</b><br>
+      Dose: ${m.dose}<br>
+
+      <select onchange="setModo(${m.id},this.value)">
+        <option value="alarm" ${modo=="alarm"?"selected":""}>🔊 Alarme</option>
+        <option value="silent" ${modo=="silent"?"selected":""}>🔕 Silencioso</option>
+        <option value="off" ${modo=="off"?"selected":""}>⛔ Desligado</option>
+      </select>
+
+      <div class="actions">
+        <button class="ok" onclick="alert('ADM')">ADM</button>
+        <button class="warn" onclick="alert('Esqueci')">⚠️</button>
+        <button class="danger" onclick="rem(${m.id})">🗑️</button>
+      </div>
+    `;
+
+    lista.appendChild(div);
+  });
+}
+
+function rem(id){
+  save(load().filter(m=>m.id!=id));
+  render();
+}
+
+/* TESTES */
+function testNotif(){
+  if(window.Android)Android.showSimpleNotification("Teste","Funcionando");
+}
+
+function testSom(){
+  if(window.Android)Android.playAlarmSound();
+}
+
+function testTela(){
+  if(window.Android)Android.openFullScreen("Teste","Tela OK");
+}
+
+document.getElementById("btnCadastrar").onclick=cadastrar;
+document.getElementById("muteBtn").onclick=toggleMute;
+
+render();
+</script>
+
+</body>
+</html>  margin-top:10px;
   border-radius:10px;
 }
 
