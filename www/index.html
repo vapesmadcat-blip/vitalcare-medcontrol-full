@@ -1,40 +1,181 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes" />
-  <title>✨ MedControl · VitalCare Tech</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    :root{
-      --bg:#07111f;--bg-soft:#0c1728;--card:#0f1a2d;--card-2:#101d33;
-      --surface:rgba(255,255,255,.04);--surface-2:rgba(255,255,255,.06);
-      --text:#e7edf7;--muted:#a6b9d6;--border:rgba(148,163,184,.20);
-      --border-strong:rgba(148,163,184,.35);--input:rgba(7,17,31,.70);
-      --green:#34d399;--blue:#67e8f9;--red:#f87171;--orange:#fb923c;
-      --pill:#22c55e;--amber:#fbbf24;--vitalcare:#06b6d4;--vitalcare-dark:#0891b2;
-      --missed-bg:rgba(239,68,68,.15);--shadow:0 28px 60px rgba(2,6,23,.45);
-      --shadow-soft:0 16px 30px rgba(2,6,23,.25);--radius:28px;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>MedControl</title>
+
+<style>
+body{
+  background:#0b1220;
+  color:#fff;
+  font-family:Arial;
+  padding:20px;
+}
+
+h1{
+  font-size:32px;
+}
+
+input, button, select{
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  border-radius:10px;
+  border:none;
+}
+
+button{
+  background:#06b6d4;
+  font-weight:bold;
+}
+
+.card{
+  background:#111827;
+  padding:12px;
+  margin-top:10px;
+  border-radius:10px;
+}
+
+.row{
+  display:flex;
+  gap:8px;
+  margin-top:8px;
+}
+
+.row button, .row select{
+  flex:1;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>💊 MedControl</h1>
+
+<button onclick="toggleMute()" id="muteBtn">🔊 MUTE OFF</button>
+
+<input id="nome" placeholder="Nome do medicamento">
+<input id="dose" placeholder="Dose (mg)">
+<input id="intervalo" type="number" placeholder="Intervalo (horas)">
+
+<button onclick="cadastrar()">Cadastrar</button>
+
+<div id="lista"></div>
+
+<script>
+
+const KEY = "meds";
+let mute = false;
+
+function load(){
+  return JSON.parse(localStorage.getItem(KEY) || "[]");
+}
+
+function save(data){
+  localStorage.setItem(KEY, JSON.stringify(data));
+}
+
+function toggleMute(){
+  mute = !mute;
+  document.getElementById("muteBtn").innerText = mute ? "🔇 MUTE ON" : "🔊 MUTE OFF";
+}
+
+function cadastrar(){
+
+  const nome = document.getElementById("nome").value.trim();
+  const dose = document.getElementById("dose").value.trim();
+  const intervalo = parseInt(document.getElementById("intervalo").value);
+
+  if(!nome){
+    alert("Informe o medicamento");
+    return;
+  }
+
+  const data = load();
+
+  data.push({
+    id: Date.now(),
+    nome,
+    dose,
+    intervalo,
+    modo: "alarme",
+    proxima: Date.now()
+  });
+
+  save(data);
+  render();
+}
+
+function setModo(id, modo){
+  const data = load();
+
+  data.forEach(m=>{
+    if(m.id === id){
+      m.modo = modo;
     }
-    body.light{
-      --bg:#eef4fb;--bg-soft:#dde8f6;--card:#fff;--card-2:#f8fbff;
-      --text:#0f172a;--muted:#516079;--border:rgba(148,163,184,.30);
-      --input:rgba(255,255,255,.90);--missed-bg:rgba(239,68,68,.08);
-    }
-    html{scroll-behavior:smooth}
-    body{
-      margin:0;min-height:100vh;padding:32px 24px;
-      font-family:"Inter",system-ui,-apple-system,sans-serif;font-weight:500;
-      color:var(--text);line-height:1.5;font-size:18px;
-      background:radial-gradient(circle at 20% 10%,rgba(6,182,212,.18),transparent 30%),radial-gradient(circle at 90% 5%,rgba(52,211,153,.16),transparent 28%),linear-gradient(145deg,var(--bg) 0%,var(--bg-soft) 100%);
-    }
-    body::before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(180deg,rgba(0,0,0,.25),transparent 70%);opacity:.25;z-index:0}
-    .wrap{max-width:100%;width:100%;margin:0 auto;position:relative;z-index:2}
-    .topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:30px;padding:28px 36px;border-radius:40px;background:linear-gradient(105deg,rgba(6,182,212,.08),rgba(8,145,178,.04));border:1px solid var(--border);box-shadow:var(--shadow-soft);backdrop-filter:blur(20px);width:100%}
-    .brand{display:flex;flex-direction:column;gap:6px}
+  });
+
+  save(data);
+}
+
+function render(){
+
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "";
+
+  load().forEach(m=>{
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <b>${m.nome}</b><br>
+      Dose: ${m.dose}<br>
+      Intervalo: ${m.intervalo}h
+
+      <div class="row">
+        <select onchange="setModo(${m.id}, this.value)">
+          <option value="alarme" ${m.modo==="alarme"?"selected":""}>🔊 Alarme</option>
+          <option value="silencioso" ${m.modo==="silencioso"?"selected":""}>🔕 Silencioso</option>
+          <option value="off" ${m.modo==="off"?"selected":""}>⛔ Desligado</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <button onclick="adm(${m.id})">✅ ADM</button>
+        <button onclick="esqueci(${m.id})">⚠️ Esqueci</button>
+        <button onclick="remover(${m.id})">🗑️</button>
+      </div>
+    `;
+
+    lista.appendChild(card);
+  });
+}
+
+function remover(id){
+  let data = load();
+  data = data.filter(m=>m.id !== id);
+  save(data);
+  render();
+}
+
+function adm(id){
+  alert("Dose registrada");
+}
+
+function esqueci(id){
+  alert("Marcado como esquecido");
+}
+
+render();
+
+</script>
+
+</body>
+</html>    .brand{display:flex;flex-direction:column;gap:6px}
     .brand h1{margin:0;font-size:56px;font-weight:800;letter-spacing:-.03em;line-height:1.1;position:relative;display:inline-block;background:linear-gradient(135deg,#06b6d4 0%,#22c55e 50%,#a855f7 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
     .brand h1 .star{position:absolute;top:-16px;left:0;font-size:36px;-webkit-text-fill-color:#fbbf24;color:#fbbf24;filter:drop-shadow(0 4px 8px #00000030)}
     .brand h1 .title-text{margin-left:6px}
