@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -136,119 +136,6 @@
     .global-mute.muted{background:linear-gradient(145deg,#64748b,#334155);color:#fff}
     .alert-mode-select{width:auto;min-width:132px;padding:9px 12px;border-radius:14px;font-size:13px;text-transform:none;background:var(--input);color:var(--text);border:1px solid var(--border)}
     .pending-title-line{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-
-  
-    /* =========================================================
-       AJUSTE RESPONSIVO SEGURO — NÃO ALTERA LÓGICA / DB / IDS
-       ========================================================= */
-    html, body {
-      width: 100%;
-      max-width: 100%;
-      overflow-x: hidden;
-    }
-
-    .wrap {
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .topbar,
-    .card,
-    .hero,
-    .grid,
-    .stack,
-    #vc-native-test-box {
-      width: 100%;
-      max-width: 100%;
-    }
-
-    .brand h1 {
-      font-size: clamp(34px, 8vw, 56px);
-    }
-
-    .hero-copy h2 {
-      font-size: clamp(26px, 6vw, 36px);
-    }
-
-    h3 {
-      font-size: clamp(22px, 5vw, 26px);
-    }
-
-    input,
-    select,
-    textarea,
-    button {
-      max-width: 100%;
-    }
-
-    .pending-row {
-      width: 100%;
-    }
-
-    @media (max-width: 700px) {
-      body {
-        padding: 16px 10px;
-      }
-
-      .wrap {
-        max-width: 100%;
-      }
-
-      .topbar {
-        padding: 20px 16px;
-        border-radius: 28px;
-      }
-
-      .topbar-right {
-        align-items: stretch;
-        width: 100%;
-      }
-
-      .topbar-actions,
-      .backup-buttons {
-        width: 100%;
-        flex-wrap: wrap;
-      }
-
-      .topbar-actions > *,
-      .backup-buttons > * {
-        flex: 1;
-      }
-
-      .card,
-      .hero {
-        padding: 20px 16px;
-        border-radius: 24px;
-      }
-
-      .stats-mini {
-        flex-direction: column;
-      }
-
-      .pending-row {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .pending-row > div:last-child {
-        width: 100%;
-        flex-wrap: wrap;
-      }
-
-      .pending-row button {
-        flex: 1;
-      }
-
-      table {
-        min-width: 720px;
-      }
-
-      #vc-native-test-box {
-        padding: 18px;
-        border-radius: 24px;
-      }
-    }
 
   </style>
 </head>
@@ -895,7 +782,7 @@
     }
   }
 
-  async   function checkAlerts(){
+  function checkAlerts(){
     const nativeOn=!!getLocalNotifications();
     getRegs().forEach(reg=>{
       if(reg.done)return;
@@ -945,7 +832,7 @@
     }
     render();setInterval(()=>{checkAlerts();render()},30000);checkAlerts();setStatus("💊 MedControl · Pronto!");
   }
-  init();
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
 </script>
 
@@ -1060,4 +947,4 @@
 </script>
 
 </body>
-</html>
+                                         </html>
