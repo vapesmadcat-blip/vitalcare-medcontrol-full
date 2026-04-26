@@ -4,64 +4,154 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MedControl</title>
+</head>
 
-<style>
-*{box-sizing:border-box}
+<body style="margin:0;background:#07111f;color:white;font-family:Arial;padding:24px">
 
-body{
-  margin:0;
-  background:#07111f;
-  color:#fff;
-  font-family:Arial;
-  padding:24px;
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+  <div style="font-size:52px">💊</div>
+  <h1 style="font-size:48px;margin:0">MedControl</h1>
+</div>
+
+<button id="muteBtn" style="width:100%;padding:18px;border:0;border-radius:16px;background:#12b8d0;font-size:24px;font-weight:bold;margin-bottom:16px">
+  🔊 MUTE OFF
+</button>
+
+<input id="nome" placeholder="Nome do medicamento" style="width:100%;padding:18px;border-radius:14px;border:0;font-size:24px;margin:8px 0">
+<input id="dose" placeholder="Dose (mg)" style="width:100%;padding:18px;border-radius:14px;border:0;font-size:24px;margin:8px 0">
+<input id="intervalo" type="number" placeholder="Intervalo (horas)" style="width:100%;padding:18px;border-radius:14px;border:0;font-size:24px;margin:8px 0">
+
+<button id="btnCadastrar" style="width:100%;padding:18px;border:0;border-radius:16px;background:#12b8d0;font-size:24px;font-weight:bold;margin:12px 0">
+  Cadastrar
+</button>
+
+<div id="lista"></div>
+
+<div style="margin-top:28px;background:#0f1a2d;padding:16px;border-radius:18px">
+  <h2>🧪 Quadro de teste</h2>
+  <button onclick="testDiag()" style="width:100%;padding:14px;margin:6px 0;border:0;border-radius:12px">🔎 Diagnóstico</button>
+  <button onclick="testNotif()" style="width:100%;padding:14px;margin:6px 0;border:0;border-radius:12px">📩 Notificação</button>
+  <button onclick="testSom()" style="width:100%;padding:14px;margin:6px 0;border:0;border-radius:12px">🔊 Som</button>
+  <button onclick="testTela()" style="width:100%;padding:14px;margin:6px 0;border:0;border-radius:12px">📱 Tela cheia</button>
+  <button onclick="test10s()" style="width:100%;padding:14px;margin:6px 0;border:0;border-radius:12px">⏰ Agendar +10s</button>
+</div>
+
+<script>
+const KEY="meds";
+const PREF="prefs";
+
+function load(){return JSON.parse(localStorage.getItem(KEY)||"[]")}
+function save(d){localStorage.setItem(KEY,JSON.stringify(d))}
+function prefs(){return JSON.parse(localStorage.getItem(PREF)||'{"mute":false,"modes":{}}')}
+function savePrefs(p){localStorage.setItem(PREF,JSON.stringify(p))}
+
+function nativeCall(fn,...args){
+  try{
+    if(window.Android && typeof Android[fn]==="function"){
+      return Android[fn](...args);
+    }
+  }catch(e){}
 }
 
-.brand{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-bottom:20px;
+function toggleMute(){
+  let p=prefs();
+  p.mute=!p.mute;
+  savePrefs(p);
+  render();
 }
 
-.brand h1{
-  margin:0;
-  font-size:36px;
+function cadastrar(){
+  let nome=document.getElementById("nome").value.trim();
+  let dose=document.getElementById("dose").value.trim();
+  let intervalo=parseInt(document.getElementById("intervalo").value||"4");
+
+  if(!nome){
+    alert("Informe o medicamento");
+    return;
+  }
+
+  let data=load();
+
+  data.push({
+    id:Date.now(),
+    nome:nome,
+    dose:dose,
+    intervalo:intervalo,
+    proxima:Date.now()+intervalo*60*60*1000
+  });
+
+  save(data);
+
+  document.getElementById("nome").value="";
+  document.getElementById("dose").value="";
+  document.getElementById("intervalo").value="";
+
+  render();
 }
 
-input,button,select{
-  width:100%;
-  padding:14px;
-  margin:8px 0;
-  border-radius:12px;
-  border:none;
-  font-size:18px;
+function setModo(id,val){
+  let p=prefs();
+  p.modes[id]=val;
+  savePrefs(p);
 }
 
-input,select{
-  background:#fff;
-  color:#000;
+function rem(id){
+  save(load().filter(m=>m.id!==id));
+  render();
 }
 
-button{
-  background:#12b8d0;
-  font-weight:bold;
+function render(){
+  let p=prefs();
+
+  document.getElementById("muteBtn").innerText=p.mute?"🔇 MUTE ON":"🔊 MUTE OFF";
+
+  let lista=document.getElementById("lista");
+  lista.innerHTML="";
+
+  load().forEach(m=>{
+    let modo=p.modes[m.id]||"alarm";
+
+    let div=document.createElement("div");
+    div.style.cssText="background:#111c2f;padding:16px;border-radius:16px;margin:14px 0";
+
+    div.innerHTML=`
+      <div style="font-size:24px;font-weight:bold">💊 ${m.nome}</div>
+      <div style="font-size:18px;color:#cbd5e1;margin:8px 0">
+        Dose: ${m.dose || "-"}<br>
+        Intervalo: ${m.intervalo}h
+      </div>
+
+      <select onchange="setModo(${m.id},this.value)" style="width:100%;padding:14px;border-radius:12px;font-size:18px">
+        <option value="alarm" ${modo==="alarm"?"selected":""}>🔊 Alarme</option>
+        <option value="silent" ${modo==="silent"?"selected":""}>🔕 Silencioso</option>
+        <option value="off" ${modo==="off"?"selected":""}>⛔ Desligado</option>
+      </select>
+
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button onclick="alert('ADM registrado')" style="flex:1;padding:12px;border:0;border-radius:10px;background:#22c55e">✅ ADM</button>
+        <button onclick="alert('Marcado como esquecido')" style="flex:1;padding:12px;border:0;border-radius:10px;background:#fb923c">⚠️</button>
+        <button onclick="rem(${m.id})" style="flex:1;padding:12px;border:0;border-radius:10px;background:#ef4444;color:white">🗑️</button>
+      </div>
+    `;
+
+    lista.appendChild(div);
+  });
 }
 
-.mute.on{
-  background:#64748b;
-  color:#fff;
-}
+function testDiag(){alert(nativeCall("diagnose")||"Sem ponte Android")}
+function testNotif(){nativeCall("showSimpleNotification","VitalCare","Teste de notificação")}
+function testSom(){nativeCall("playAlarmSound")}
+function testTela(){nativeCall("openFullScreen","Teste","Tela cheia OK")}
+function test10s(){nativeCall("scheduleTypedAlarm",999001,Date.now()+10000,"Teste +10s","Alarme nativo","due")}
 
-.card{
-  background:#111c2f;
-  padding:14px;
-  border-radius:14px;
-  margin-top:14px;
-}
+document.getElementById("btnCadastrar").onclick=cadastrar;
+document.getElementById("muteBtn").onclick=toggleMute;
 
-.actions{
-  display:flex;
-  gap:6px;
+render();
+</script>
+
+</body>
+</html>  gap:6px;
   margin-top:10px;
 }
 
