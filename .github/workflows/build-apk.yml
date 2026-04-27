@@ -8,67 +8,86 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+      # 1. Checkout
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 2. Node
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
+      # 3. Java 21
       - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
+      # 4. Instalar dependências
       - name: Install dependencies
-        run: |
-          npm install
+        run: npm install
 
+      # 5. Inicializar Capacitor
       - name: Init Capacitor
-        run: |
-          npx cap init "MedControl" com.vitalcare.medcontrol --web-dir=www
+        run: npx cap init "MedControl" com.vitalcare.medcontrol --web-dir=www
 
+      # 6. Adicionar Android
       - name: Add Android
-        run: |
-          npx cap add android
+        run: npx cap add android
 
-      - name: Copy native Java
+      # 7. Copiar código Java nativo
+      - name: Copy Native Java
         run: |
           mkdir -p android/app/src/main/java/com/vitalcare/medcontrol
           cp -r native/android/app/src/main/java/com/vitalcare/medcontrol/* android/app/src/main/java/com/vitalcare/medcontrol/
 
+      # 8. Copiar Manifest
       - name: Copy Manifest
         run: |
           cp native/android/app/src/main/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
 
+      # 9. Sync Capacitor
       - name: Sync Capacitor
-        run: |
-          npx cap sync android
+        run: npx cap sync android
 
-      - name: Copy Android icons after sync
+      # 10. FORÇAR ÍCONES (REMOVE adaptive + copia os teus)
+      - name: Force Custom Icons
         run: |
+          echo "=== REMOVENDO ICONES DO CAPACITOR ==="
+          rm -rf android/app/src/main/res/mipmap-anydpi-v26 || true
+          rm -f android/app/src/main/res/mipmap-*/ic_launcher_foreground.png || true
+          rm -f android/app/src/main/res/mipmap-*/ic_launcher_round.png || true
+
+          echo "=== COPIANDO SEUS ICONES ==="
           cp -r native/android/app/src/main/res/* android/app/src/main/res/
-          ls -R android/app/src/main/res/mipmap-mdpi || true
-          ls -R android/app/src/main/res/mipmap-hdpi || true
-          ls -R android/app/src/main/res/mipmap-xhdpi || true
-          ls -R android/app/src/main/res/mipmap-xxhdpi || true
-          ls -R android/app/src/main/res/mipmap-xxxhdpi || true
 
-      - name: Force Java 21
+          echo "=== VALIDANDO ==="
+          find android/app/src/main/res -name "ic_launcher*" -type f
+
+      # 11. Reforçar Manifest
+      - name: Force Manifest Again
+        run: |
+          cp native/android/app/src/main/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+
+      # 12. Forçar Java no Gradle
+      - name: Fix Gradle Java
         run: |
           echo "org.gradle.java.home=$JAVA_HOME" >> android/gradle.properties
 
-      - name: Grant Gradle permission
-        run: |
-          chmod +x android/gradlew
+      # 13. Permissão Gradle
+      - name: Grant Permission
+        run: chmod +x android/gradlew
 
+      # 14. Build APK
       - name: Build APK
         run: |
           cd android
           ./gradlew assembleDebug
 
+      # 15. Upload APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
