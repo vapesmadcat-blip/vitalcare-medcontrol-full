@@ -1,41 +1,51 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.vitalcare.medcontrol">
+
+    <!-- PERMISSÕES -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
+        android:label="MedControl"
         android:icon="@mipmap/ic_launcher"
-        android:label="VitalCare Test"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:roundIcon="@mipmap/ic_launcher"
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
+        <!-- ACTIVITY PRINCIPAL -->
         <activity
-            android:name=".AlarmActivity"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:showWhenLocked="true"
-            android:turnScreenOn="true" />
-
-        <activity
-            android:name=".MainActivity"
+            android:name="com.getcapacitor.BridgeActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:theme="@style/AppTheme.NoActionBarLaunch">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
 
+        <!-- RECEIVER PARA ALARMES -->
         <receiver
             android:name=".AlarmReceiver"
+            android:exported="true" />
+
+        <!-- RECEIVER PARA REBOOT -->
+        <receiver
+            android:name=".BootReceiver"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+
+        </receiver>
+
     </application>
+
 </manifest>
