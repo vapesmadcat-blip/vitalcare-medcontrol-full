@@ -16,47 +16,62 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 22
+          node-version: 18
 
-      # 3. Instalar Capacitor
+      # 3. Java 17 (CORREÇÃO DO ERRO)
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # 4. Instalar Capacitor
       - name: Install Capacitor
         run: |
           npm init -y
           npm install @capacitor/core @capacitor/cli
 
-      # 4. Criar projeto Capacitor
+      # 5. Inicializar Capacitor
       - name: Init Capacitor
         run: |
-          npx cap init medcontrol com.vitalcare.medcontrol --web-dir=www
+          npx cap init "MedControl" com.vitalcare.medcontrol --web-dir=www
 
-      # 5. Adicionar Android
+      # 6. Adicionar Android
       - name: Add Android
         run: |
           npx cap add android
 
-      # 6. Copiar HTML (teu app)
+      # 7. Copiar APP (HTML)
       - name: Copy Web App
         run: |
           cp -r www/* android/app/src/main/assets/public/
 
-      # 7. Copiar recursos nativos (ícones)
+      # 8. Copiar ÍCONES (RES)
       - name: Copy Native Resources
         run: |
           cp -r native/android/app/src/main/res/* android/app/src/main/res/
 
-      # 8. Sincronizar Capacitor
-      - name: Sync
+      # 9. Sincronizar
+      - name: Sync Capacitor
         run: |
           npx cap sync android
 
-      # 9. Build APK
+      # 10. Forçar Java correto no Gradle
+      - name: Fix Gradle Java
+        run: |
+          echo "org.gradle.java.home=$JAVA_HOME" >> android/gradle.properties
+
+      # 11. Permissão Gradle
+      - name: Grant Permission
+        run: chmod +x android/gradlew
+
+      # 12. Build APK
       - name: Build APK
         run: |
           cd android
-          chmod +x gradlew
           ./gradlew assembleDebug
 
-      # 10. Upload APK
+      # 13. Upload APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
